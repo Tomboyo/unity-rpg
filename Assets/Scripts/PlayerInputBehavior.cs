@@ -5,70 +5,55 @@ using UnityEngine.InputSystem;
 public class PlayerInputBehavior : MonoBehaviour
 {
 
-    [Tooltip("Inputs whose magnitude is less than the deadZone are ignored.")]
-    [Range(0f, 1f)]
-    public float deadZone = 0.05f;
-    public float moveSpeed = 1.0f;
-    public float turnSpeed = 1.0f;
-    [Tooltip("The player cannot depress the camera further than this.")]
-    public float minimumElevation = -90f;
-    [Tooltip("The player cannot raise the camera higher than this.")]
-    public float maximumElevation = 90f;
-
-    [Header("Component References")]
+    [Range(0f, 1)]
+    public float deadZone = 0.01f;
+    public float moveSpeed = 2f;
+    [Tooltip("Camera movement speed in degrees per second.")]
+    public float turnSpeed = 360f;
+    public float minPitch = -30f;
+    public float maxPitch = 70f;
     public Transform cameraTarget;
 
     private CharacterController controller;
     private Vector3 move = Vector3.zero;
-    private float cameraTurn;
-    private float cameraLift;
+    private Vector2 look = Vector2.zero;
+    private float yaw;   // left-right
+    private float pitch; // up-down
 
     private void Start()
     {
         controller = GetComponent<CharacterController>();
+        yaw = controller.transform.eulerAngles.y;
+        pitch = cameraTarget.eulerAngles.x;
     }
 
     public void OnMove(InputAction.CallbackContext context)
     {
-        var vec = context.ReadValue<Vector2>();
-        move = new Vector3(vec.x, 0f, vec.y);
+        var move2 = context.ReadValue<Vector2>();
+        move = new Vector3(move2.x, 0f, move2.y);
     }
 
     public void OnLook(InputAction.CallbackContext context)
     {
-        var vec = context.ReadValue<Vector2>();
-        cameraTurn = vec.x;
-        cameraLift = vec.y;
+        look = context.ReadValue<Vector2>();
     }
 
     void Update()
     {
-        // Rotation about the Y axis (lLeft and right")
-        if (Mathf.Abs(cameraTurn) > deadZone)
-        {
-            var turnDirection = Quaternion.AngleAxis(cameraTurn <= 0 ? -90 : 90, Vector3.up);
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                transform.rotation * turnDirection,
-                Time.deltaTime * turnSpeed * Mathf.Abs(cameraTurn));
-        }
-
-        // Rotation about the X axis ("up and down")
-        if (Mathf.Abs(cameraLift) > deadZone)
-        {
-            // Rotate the local cameraAnchor rotation towards the minimum or maximum angle on the X axis. Because we
-            // only ever set the X axis rotation on the camera Anchor (putting all Y-axis rotation on the player
-            // transform), we don't need to acknowledge either of the other axes.
-            cameraTarget.localRotation = Quaternion.Slerp(
-                cameraTarget.localRotation,
-                Quaternion.Euler(cameraLift < 0 ? maximumElevation : minimumElevation, 0f, 0f),
-                Time.deltaTime * turnSpeed * Mathf.Abs(cameraLift));
-        }
-
-
+        // Movement
         if (Mathf.Abs(move.magnitude) > deadZone)
         {
             controller.Move(transform.rotation * (moveSpeed * Time.deltaTime * move));
+        }
+
+        Debug.Log(look);
+        if (look.sqrMagnitude > deadZone)
+        {
+            yaw += (look.x * turnSpeed * Time.deltaTime);
+            pitch = Mathf.Clamp(pitch + look.y * turnSpeed * Time.deltaTime, minPitch, maxPitch);
+
+            transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+            cameraTarget.rotation = Quaternion.Euler(pitch, yaw, 0f);
         }
     }
 }
