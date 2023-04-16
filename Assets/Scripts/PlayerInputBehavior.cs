@@ -5,8 +5,6 @@ using UnityEngine.InputSystem;
 public class PlayerInputBehavior : MonoBehaviour
 {
 
-    [Range(0f, 1)]
-    public float deadZone = 0.01f;
     public float moveSpeed = 2f;
     [Tooltip("Camera movement speed in degrees per second.")]
     public float turnSpeed = 360f;
@@ -41,19 +39,12 @@ public class PlayerInputBehavior : MonoBehaviour
     void Update()
     {
         // Movement
-        if (Mathf.Abs(move.magnitude) > deadZone)
-        {
-            controller.Move(transform.rotation * (moveSpeed * Time.deltaTime * move));
-        }
+        controller.Move(transform.rotation * (moveSpeed * Time.deltaTime * move));
 
-        Debug.Log(look);
-        if (look.sqrMagnitude > deadZone)
-        {
-            yaw += (look.x * turnSpeed * Time.deltaTime);
-            pitch = Mathf.Clamp(pitch + look.y * turnSpeed * Time.deltaTime, minPitch, maxPitch);
-
-            transform.rotation = Quaternion.Euler(0f, yaw, 0f);
-            cameraTarget.rotation = Quaternion.Euler(pitch, yaw, 0f);
-        }
+        // Look
+        yaw += (look.x * turnSpeed * Time.deltaTime);
+        pitch = Mathf.Clamp(pitch + look.y * turnSpeed * Time.deltaTime, minPitch, maxPitch);
+        transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+        cameraTarget.rotation = Quaternion.Euler(pitch, yaw, 0f);
     }
 }
