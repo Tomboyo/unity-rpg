@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(Animator))]
 public class PlayerInputBehavior : MonoBehaviour
 {
 
@@ -13,6 +14,7 @@ public class PlayerInputBehavior : MonoBehaviour
     public Transform cameraTarget;
 
     private CharacterController controller;
+    private Animator animator;
     private Vector3 move = Vector3.zero;
     private Vector2 look = Vector2.zero;
     private float yaw;   // left-right
@@ -21,6 +23,8 @@ public class PlayerInputBehavior : MonoBehaviour
     private void Start()
     {
         controller = GetComponent<CharacterController>();
+        animator = GetComponent<Animator>();
+
         yaw = controller.transform.eulerAngles.y;
         pitch = cameraTarget.eulerAngles.x;
     }
@@ -38,7 +42,13 @@ public class PlayerInputBehavior : MonoBehaviour
 
     void Update()
     {
-        // Movement
+        Debug.Log(move);
+        animator.SetFloat("moveX", move.x);
+        animator.SetFloat("moveY", move.z);
+    }
+
+    private void OnAnimatorMove()
+    {
         controller.Move(transform.rotation * (moveSpeed * Time.deltaTime * move));
 
         // Look
