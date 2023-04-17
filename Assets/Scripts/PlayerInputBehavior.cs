@@ -13,12 +13,21 @@ public class PlayerInputBehavior : MonoBehaviour
     public float maxPitch = 70f;
     public Transform cameraTarget;
 
+    [Header("Equipment Mounts")]
+    public Transform hipMount;
+    public Transform rightHandMount;
+
+    [Header("Equipped Qeapon")]
+    public GameObject weapon;
+
     private CharacterController controller;
     private Animator animator;
     private Vector3 move = Vector3.zero;
     private Vector2 look = Vector2.zero;
     private float yaw;   // left-right
     private float pitch; // up-down
+
+    private bool isWeaponDrawn;
 
     private void Start()
     {
@@ -27,6 +36,9 @@ public class PlayerInputBehavior : MonoBehaviour
 
         yaw = controller.transform.eulerAngles.y;
         pitch = cameraTarget.eulerAngles.x;
+
+        isWeaponDrawn = false;
+        MountWeapon(hipMount);
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -38,6 +50,21 @@ public class PlayerInputBehavior : MonoBehaviour
     public void OnLook(InputAction.CallbackContext context)
     {
         look = context.ReadValue<Vector2>();
+    }
+
+    public void OnFire(InputAction.CallbackContext context)
+    {
+        // TODO: do not interrupt weapon animations
+        if (!isWeaponDrawn)
+        {
+            isWeaponDrawn = true;
+            MountWeapon(rightHandMount);
+        }
+        else
+        {
+            isWeaponDrawn = false;
+            MountWeapon(hipMount);
+        }
     }
 
     void Update()
@@ -56,5 +83,12 @@ public class PlayerInputBehavior : MonoBehaviour
         pitch = Mathf.Clamp(pitch + look.y * turnSpeed * Time.deltaTime, minPitch, maxPitch);
         transform.rotation = Quaternion.Euler(0f, yaw, 0f);
         cameraTarget.rotation = Quaternion.Euler(pitch, yaw, 0f);
+    }
+
+    private void MountWeapon(Transform target)
+    {
+        weapon.transform.parent = target;
+        weapon.transform.localRotation = Quaternion.identity;
+        weapon.transform.localPosition = Vector3.zero;
     }
 }
